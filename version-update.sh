@@ -20,7 +20,7 @@ function updateJsonVersion {
     node > $temp <<EOF
       var data = require('./${json_file}');
       data.version = '${version}';
-      console.log(JSON.stringify(data, null, 4));
+      console.log(JSON.stringify(data, null, 2));
 EOF
     mv $temp $json_file
     echo "$json_file updated."
