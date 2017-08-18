@@ -8,12 +8,6 @@ if [ $node_exists -ne 0 ]; then
   exit 1;
 fi
 
-function find_base_dir {
-  local real_path=$(python -c "import os,sys;print os.path.realpath('$0')")
-  local dir_name="$(dirname "$real_path")"
-  BASEDIR="${dir_name}/.."
-}
-
 function updateJsonVersion {
   version=$1
   json_file=$2
@@ -25,7 +19,6 @@ function updateJsonVersion {
 
     node > $temp <<EOF
       var data = require('./${json_file}');
-      delete data.version
       data.version = '${version}';
       console.log(JSON.stringify(data, null, 4));
 EOF
@@ -49,11 +42,12 @@ Options:
 EOF
 }
 
-find_base_dir
+determine_os_distro
+download_yaml_parser
 
-bower="$BASEDIR/bower.json"
-package="$BASEDIR/package.json"
-composer="$BASEDIR/composer.json"
+bower="bower.json"
+package="package.json"
+composer="composer.json"
 while [ "$#" -gt 0 ]; do
   case "$1" in
     (--bower|-b)
