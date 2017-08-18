@@ -1,14 +1,17 @@
 #!/bin/bash
 
-if which node > /dev/null then
-  echo "Node must be installed. https://nodejs.org/en/"
+node=`which node > /dev/null`
+node_exists=$?
+
+if [ $node_exists -ne 0 ]; then
+  echo "Node must be installed. https://nodejs.org/en/";
   exit 1;
 fi
 
 function find_base_dir {
-    local real_path=$(python -c "import os,sys;print os.path.realpath('$0')")
-    local dir_name="$(dirname "$real_path")"
-    BASEDIR="${dir_name}/.."
+  local real_path=$(python -c "import os,sys;print os.path.realpath('$0')")
+  local dir_name="$(dirname "$real_path")"
+  BASEDIR="${dir_name}/.."
 }
 
 function updateJsonVersion {
@@ -51,7 +54,6 @@ find_base_dir
 bower="$BASEDIR/bower.json"
 package="$BASEDIR/package.json"
 composer="$BASEDIR/composer.json"
-
 while [ "$#" -gt 0 ]; do
   case "$1" in
     (--bower|-b)
@@ -77,10 +79,11 @@ while [ "$#" -gt 0 ]; do
       ;;
     (*)
       version=$1
-      for file in $bower $package $composer; do
-        updateJsonVersion $version $file
-      done
-      exit 0;
+      shift
       ;;
 esac
+done
+
+for file in $bower $package $composer; do
+  updateJsonVersion $version $file
 done
