@@ -42,9 +42,6 @@ Options:
 EOF
 }
 
-determine_os_distro
-download_yaml_parser
-
 bower="bower.json"
 package="package.json"
 composer="composer.json"
