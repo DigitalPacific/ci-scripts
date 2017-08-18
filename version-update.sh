@@ -1,28 +1,42 @@
 #!/bin/bash
 
-node=`which node > /dev/null`
-node_exists=$?
+function check_node_version {
+  node=`which node > /dev/null`
+  node_exists=$?
 
-if [ $node_exists -ne 0 ]; then
-  echo "Node must be installed. https://nodejs.org/en/";
-  exit 1;
-fi
+  if [ $node_exists -ne 0 ]; then
+    echo "Node must be installed. https://nodejs.org/en/";
+    exit 1;
+  fi
+}
 
-function updateJsonVersion {
+function cleanup_version_change_failure {
+  temp_file=$1
+  echo "Cleaning up temp file $temp_file"
+  rm "$temp_file"
+}
+
+function update_json_version {
   version=$1
   json_file=$2
 
   if [ ! -f $json_file ]; then
     echo "$json_file was not found."
   else
-    temp=$json_file.tmp
+    temp_file="${json_file}.tmp"
+    trap "cleanup_version_change_failure $temp_file" ERR
 
-    node > $temp <<EOF
+    node > $temp_file <<EOF
       var data = require('./${json_file}');
       data.version = '${version}';
       console.log(JSON.stringify(data, null, 2));
 EOF
-    mv $temp $json_file
+
+    if [ $? -ne 0 ]; then
+      exit 1
+    fi
+
+    mv -f $temp_file $json_file
     echo "$json_file updated."
   fi
 }
@@ -42,6 +56,9 @@ Options:
 EOF
 }
 
+check_node_version
+
+version=""
 bower="bower.json"
 package="package.json"
 composer="composer.json"
@@ -75,6 +92,11 @@ while [ "$#" -gt 0 ]; do
 esac
 done
 
-for file in $bower $package $composer; do
-  updateJsonVersion $version $file
+if [[ -z "$version" ]]; then
+  echo "A version is required"
+  exit 1
+fi
+
+for file in "$bower" "$package" "$composer"; do
+  update_json_version $version $file
 done
